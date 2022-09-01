@@ -136,7 +136,7 @@ public class MovementBehaviors : MonoBehaviour
     public static Vector3 walkVelocity(controllerState s) 
     {
         float sideMovement = s.leftStick.x;
-        print(s.leftStick.x + " "+ s.leftStick.y);
+        //print(s.leftStick.x + " "+ s.leftStick.y);
         return new Vector3(sideMovement * instance.minCruiseVel, 0, ((s.leftStick.y * instance.minCruiseVel)));
     }
     public static void rotateAndPositionCam(controllerState s, GameObject g) 
@@ -147,8 +147,9 @@ public class MovementBehaviors : MonoBehaviour
             Ray ray = new Ray(g.transform.parent.position, new Vector3(0, Mathf.Clamp(1+s.rightStick.y,0,1), Mathf.Clamp(1 + (-1*s.rightStick.y), 0, 1)).normalized);
             RaycastHit hitInfo = new RaycastHit();
             
-                g.transform.localPosition = new Vector3(0, Mathf.Sqrt(instance.thirdPersonMaxDist)/2f, -Mathf.Sqrt(instance.thirdPersonMaxDist));
-            
+                g.transform.localPosition = CameraShake.instance.camOffset+new Vector3(0, Mathf.Sqrt(instance.thirdPersonMaxDist) / 2f, -Mathf.Sqrt(instance.thirdPersonMaxDist));
+
+
         }
         else {
             g.transform.position = g.transform.parent.position+Vector3.up* 1.5f;

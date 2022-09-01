@@ -58,10 +58,14 @@ public class securityScript : MonoBehaviour
         {
             if (MovementBehaviors.instance.isThirdPerson)
             {
-                if (Vector3.Dot(transform.forward, (PeopleScript.Player.transform.position - transform.position).normalized) > .3f||detected&&(PeopleScript.Player.transform.position - transform.position).magnitude < 30)
+                RaycastHit sight;
+                Physics.Raycast(transform.position, (PeopleScript.Player.transform.position - transform.position).normalized,out sight, 15f);
+                if (Vector3.Dot(transform.forward, (PeopleScript.Player.transform.position - transform.position).normalized) > .3f||detected&&sight.collider?.gameObject.GetComponent<samplecontrollerscript>()!=null)
                 {
+                    
                     if (!samplecontrollerscript.multiplier.Contains(this)) 
                     {
+                        print(gameObject.name + " saw the player");
                         samplecontrollerscript.multiplier.Add(this);
                     }
                     detected = true;
@@ -78,6 +82,7 @@ public class securityScript : MonoBehaviour
                 {
                     if (samplecontrollerscript.multiplier.Contains(this))
                     {
+                        print(gameObject.name + " lost the player");
                         samplecontrollerscript.multiplier.Remove(this);
                     }
                     detected = false;

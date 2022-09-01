@@ -31,6 +31,7 @@ Transform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0.806231, y: -0.016430438, z: 16.809944}
   m_LocalScale: {x: 0.5, y: 1.75, z: 0.23}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4594653030946220293}
   - {fileID: 4055990555823865148}
@@ -91,6 +92,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5bfe833898b2e18488dc18b71211ced8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  slowamount: 0
 --- !u!114 &4594653030907521713
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -103,6 +105,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e01e1e5cb16236e43b6da321eea52cd9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  pausemovefor: 0
   _camera: {fileID: 4594653031116971665}
   gravity: 6
   charWidth: 1
@@ -164,6 +167,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 2, y: 0.57142854, z: 4.347826}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4594653031116971668}
   m_Father: {fileID: 4594653030907521718}
@@ -180,6 +184,7 @@ GameObject:
   - component: {fileID: 4594653031116971668}
   - component: {fileID: 4594653031116971667}
   - component: {fileID: 4594653031116971666}
+  - component: {fileID: 9186374464395542325}
   m_Layer: 6
   m_Name: Camera
   m_TagString: MainCamera
@@ -197,6 +202,7 @@ Transform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0.6237499, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 4594653030946220293}
   m_RootOrder: 0
@@ -252,6 +258,18 @@ AudioListener:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4594653031116971665}
   m_Enabled: 1
+--- !u!114 &9186374464395542325
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4594653031116971665}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d1aba04893c2e2499034223b276816d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &4594653031664261847
 PrefabInstance:
   m_ObjectHideFlags: 0

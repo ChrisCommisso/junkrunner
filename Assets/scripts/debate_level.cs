@@ -25,13 +25,10 @@ public class debate_level : MonoBehaviour
         timePassed += Time.deltaTime;
         if (timePassed >= 1) 
         {
-            samplecontrollerscript.score += (int)Mathf.Clamp(samplecontrollerscript.multiplier.Count,1,float.MaxValue) * samplecontrollerscript.scorePerSecond.Count;
+            samplecontrollerscript.score += ((int)Mathf.Clamp(samplecontrollerscript.multiplier.Count,1,float.MaxValue) * samplecontrollerscript.scorePerSecond.Count)/100;
             timePassed = 0;
         }
         transform.GetChild(0).GetChild(0).GetComponent<Text>().text = "Score: " + samplecontrollerscript.score; 
-        if (chairsFlipped.Count > 60) 
-        {
-            samplecontrollerscript.score += 10000*samplecontrollerscript.multiplier.Count;
-        }
+        
     }
 }

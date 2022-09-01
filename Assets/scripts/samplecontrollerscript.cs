@@ -6,10 +6,11 @@ using UnityEngine.Android;
 
 public class samplecontrollerscript : MonoBehaviour
 {
-
+    List<Rigidbody> shuddering;
     Vector3 vel;
     bool prevButton8;
     int physicsLayer;
+    int doorLayer;
     float slowDownTime;
     public float slowamount;
     public static samplecontrollerscript instance;
@@ -19,13 +20,14 @@ public class samplecontrollerscript : MonoBehaviour
     public static int score;
     IEnumerator rotationshift(RaycastHit hitInfo,float timeToTake) 
     {
+        CameraShake.instance.shakeDuration = timeToTake;
         rotating = true;
         float timePassed = 0;
         Vector3 start = transform.forward;
-        Vector3 finish = Vector3.Cross(Vector3.Cross(transform.forward, hitInfo.normal), transform.forward);
+        Vector3 finish = Vector3.Reflect(transform.forward, hitInfo.normal);
         while (timeToTake >= timePassed) 
         {
-            Vector3 newfwd = Vector3.Lerp(start, finish, timePassed / timeToTake);
+            Vector3 newfwd = Vector3.Lerp(start, finish, (timePassed) / (timeToTake));
             transform.forward = new Vector3(newfwd.x, 0, newfwd.z);
             yield return new WaitForEndOfFrame();
             timePassed += Time.deltaTime;
@@ -35,12 +37,13 @@ public class samplecontrollerscript : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        shuddering = new List<Rigidbody>();
         multiplier = new List<securityScript>();
         scorePerSecond = new List<PeopleScript>();
         rotating = false;
         slowDownTime = 0f;
         physicsLayer = LayerMask.NameToLayer("physicsLayer");
+        doorLayer = LayerMask.NameToLayer("door");
         if (instance == null)
         {
             instance = this;
@@ -84,6 +87,23 @@ public class samplecontrollerscript : MonoBehaviour
         c.leftStick = left;
         return c;
     }
+    IEnumerator DoorShutter(Vector3 forward,Vector3 v,Rigidbody rig) {
+        bool contained= shuddering.Contains(rig);
+        if (!contained)
+        {
+            shuddering.Add(rig);
+        }
+        Vector3 fwd = forward.normalized;
+        float magnitudeToUse = v.sqrMagnitude;
+        while ((magnitudeToUse>10||magnitudeToUse<-10)&&!contained)
+        { 
+            rig.AddForceAtPosition(Vector3.ClampMagnitude(transform.forward * magnitudeToUse,100f), transform.position, ForceMode.Impulse);
+            magnitudeToUse /= -2;
+            yield return new WaitForSeconds(.3f);
+        }
+        if(!contained)
+        shuddering.Remove(rig);
+    }
     private void Update()
     {
         Vector3 pos = transform.position;
@@ -91,7 +111,7 @@ public class samplecontrollerscript : MonoBehaviour
         
         
         MovementBehaviors.rotateAndPositionCam(state, MovementBehaviors.instance._camera);
-        GetComponent<CharacterController>().Move(new Vector3(0,-MovementBehaviors.instance.gravity*Time.deltaTime,0));
+        //GetComponent<CharacterController>().Move();
         if (MovementBehaviors.instance.pausemovefor >= 0) { 
         MovementBehaviors.instance.pausemovefor-=Time.deltaTime;
         }
@@ -99,23 +119,29 @@ public class samplecontrollerscript : MonoBehaviour
         {
             RaycastHit hitInfo = new RaycastHit();
             UnityEngine.Vector3 movement = MovementBehaviors.cruiseVelocity(state) * Time.deltaTime;
-            movement = transform.forward * movement.z + transform.up * movement.y + transform.right * movement.x;
-            Ray ray = new Ray(MovementBehaviors.instance._camera.transform.parent.position, MovementBehaviors.instance._camera.transform.parent.forward);
+            movement = transform.forward * movement.z + transform.up * movement.y + transform.right * movement.x + new Vector3(0, -MovementBehaviors.instance.gravity * Time.deltaTime, 0); 
+            Ray ray = new Ray(MovementBehaviors.instance._camera.transform.parent.position+(Vector3.up*.5f), MovementBehaviors.instance._camera.transform.parent.forward);
             if (slowDownTime >= 0f)
             {
                 movement *= slowamount;
             }
-            if (Physics.Raycast(ray, out hitInfo, 1f) &&!rotating)
+            if (Physics.Raycast(ray, out hitInfo, 1.25f) &&!rotating)
             {
-                if(hitInfo.transform.gameObject.layer != physicsLayer)
-                StartCoroutine(rotationshift(hitInfo, .1f));
+                if (hitInfo.transform.gameObject.layer != physicsLayer && hitInfo.transform.gameObject.layer != doorLayer)
+                {
+                    StartCoroutine(rotationshift(hitInfo, .4f));
+                }
+                else if (hitInfo.transform.gameObject.layer == doorLayer)
+                {
+                    StartCoroutine(DoorShutter(transform.forward.normalized, vel, hitInfo.transform.gameObject.GetComponent<Rigidbody>()));
+                }
             }    
            //    Vector3 collisionpoint = hitInfo.point;
            //    Vector3 part1 = (hitInfo.point - transform.position).normalized* ((hitInfo.point - transform.position).magnitude);
            //    movement = part1+Vector3.Project(movement,Vector3.Cross(hitInfo.normal, Vector3.up));
            //}
-            
-            GetComponent<CharacterController>().Move(movement);
+            if(!rotating)
+            GetComponent<CharacterController>().Move(movement+ new Vector3(0, -MovementBehaviors.instance.gravity * Time.deltaTime, 0));
         }
         else
         {
@@ -127,7 +153,7 @@ public class samplecontrollerscript : MonoBehaviour
             {
                 movement = movement * .05f;
             }
-            GetComponent<CharacterController>().Move(movement);
+            GetComponent<CharacterController>().Move(movement + new Vector3(0, -MovementBehaviors.instance.gravity * Time.deltaTime, 0));
 
         }
         vel = (pos - transform.position)/Time.deltaTime;
@@ -152,8 +178,15 @@ public class samplecontrollerscript : MonoBehaviour
             if (Physics.Raycast(ray,out hit,1,(1<<physicsLayer)))//(Physics.CapsuleCast(GetComponent<CharacterController>().transform.position - new Vector3(0, GetComponent<CharacterController>().height, 0), GetComponent<CharacterController>().transform.position + new Vector3(0,GetComponent<CharacterController>().height,0) , 10, new Vector3(Mathf.Cos(i), 0, Mathf.Sin(i)), out hit,3, 1 << physicsLayer))
             {
                 //If the object is touched by a platform, move the object away from it
-
-                if (hit.rigidbody != null)
+                if (hit.transform.gameObject.GetComponent<SilkShatter>() != null) {
+                    hit.transform.gameObject.GetComponent<SilkShatter>().ShatterFrom(hit.point-transform.forward*2f,vel.magnitude);
+                }
+                if (hit.transform.gameObject.GetComponent<Bush>() != null)
+                {
+                    slowDownTime = hit.transform.gameObject.GetComponent<Bush>().slowTime;
+                    slowamount = hit.transform.gameObject.GetComponent<Bush>().slowAmount;
+                }
+                if (hit.rigidbody != null&& hit.transform.gameObject.layer != doorLayer)
                 {
                     slowDownTime = .2f;
                     slowamount = 1 / hit.rigidbody.mass;
@@ -170,18 +203,22 @@ public class samplecontrollerscript : MonoBehaviour
 
                     else
                     {
-                        hit.rigidbody.AddForceAtPosition((hit.transform.position - transform.position).normalized * Time.fixedDeltaTime, hit.point);
+                        //hit.rigidbody.AddForceAtPosition((hit.transform.position - transform.position).normalized * Time.fixedDeltaTime, hit.point);
                     }
-                    if (MovementBehaviors.instance.isThirdPerson)
-                        hit.rigidbody.AddTorque(Random.Range(-1f, 2f) * Time.fixedDeltaTime * hit.rigidbody.mass * .5f * 3 * vel, ForceMode.Impulse);
+                    
                 }
+                
                 float cruisevel = .5f * (MovementBehaviors.instance.maxCruiseVel - MovementBehaviors.instance.minCruiseVel)+ MovementBehaviors.instance.minCruiseVel;
                 if (hit.transform.gameObject.GetComponent<Staircase>() && MovementBehaviors.instance.pausemovefor <= 0)
                 {
                     MovementBehaviors.instance.pausemovefor = hit.transform.gameObject.GetComponent<Staircase>().pausemovefor;
-                    StartCoroutine(hit.transform.gameObject.GetComponent<Staircase>().belay(cruisevel, this.gameObject));
+                    StartCoroutine(hit.transform.gameObject.GetComponent<Staircase>().belay(cruisevel/2f, this.gameObject));
                 }
-
+                if (hit.transform.gameObject.GetComponent<Fountain>() && MovementBehaviors.instance.pausemovefor <= 0)
+                {
+                    
+                    StartCoroutine(hit.transform.gameObject.GetComponent<Fountain>().belay(hit.point,.73f, this.gameObject));
+                }
 
             }
         }
